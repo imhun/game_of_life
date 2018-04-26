@@ -105,9 +105,7 @@ impl Universe {
 /// Public methods, exported to JavaScript.
 #[wasm_bindgen]
 impl Universe {
-    pub fn new() -> Universe {
-        let width = 128u32;
-        let height = 128u32;
+    pub fn new(width:u32,height:u32) -> Universe {
         let len = (width * height) as usize;
 
         let mut cells = vec![0u8; if len % 8 == 0 { len / 8 } else { len / 8 + 1 }];

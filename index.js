@@ -5,7 +5,7 @@ import {
   memory
 } from "./wasm_game_of_life_bg";
 
-const CELL_SIZE = 5; // px
+const CELL_SIZE = 4; // px
 const GRID_COLOR = "#CCCCCC";
 const DEAD_COLOR = "#FFFFFF";
 const ALIVE_COLOR = "#000000";
@@ -15,7 +15,7 @@ const DEAD = 0;
 const ALIVE = 1;
 
 
-const universe = Universe.new();
+const universe = Universe.new(128,128);
 const width = universe.width();
 const height = universe.height();
 
