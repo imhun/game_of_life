@@ -121,7 +121,7 @@ playClearButton.addEventListener("click", event => {
 playRandButton.addEventListener("click", event => {
   universe.rand_gen();
   draw();
-  
+  gti
   pause();
 });
 
