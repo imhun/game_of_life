@@ -1,6 +1,12 @@
 /* tslint:disable */
 import * as wasm from './wasm_game_of_life_bg';
 
+const __wbg_f_random_random_n_target = Math.random;
+
+export function __wbg_f_random_random_n() {
+    return __wbg_f_random_random_n_target();
+}
+
 const TextDecoder = typeof self === 'object' && self.TextDecoder
     ? self.TextDecoder
     : require('util').TextDecoder;
@@ -57,15 +63,17 @@ export class Universe {
         static new() {
     return Universe.__construct(wasm.universe_new());
 }
-render() {
-    const ret = wasm.universe_render(this.ptr);
-    const len = getGlobalArgument(0);
-    const realRet = getStringFromWasm(ret, len);
-    wasm.__wbindgen_free(ret, len * 1);
-    return realRet;
-}
 tick() {
     return wasm.universe_tick(this.ptr);
+}
+rand_gen() {
+    return wasm.universe_rand_gen(this.ptr);
+}
+toggle_cell(arg0, arg1) {
+    return wasm.universe_toggle_cell(this.ptr, arg0, arg1);
+}
+clear() {
+    return wasm.universe_clear(this.ptr);
 }
 width() {
     return wasm.universe_width(this.ptr);
@@ -78,6 +86,13 @@ bytes() {
 }
 cells() {
     return wasm.universe_cells(this.ptr);
+}
+render() {
+    const ret = wasm.universe_render(this.ptr);
+    const len = getGlobalArgument(0);
+    const realRet = getStringFromWasm(ret, len);
+    wasm.__wbindgen_free(ret, len * 1);
+    return realRet;
 }
 }
 

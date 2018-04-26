@@ -1,7 +1,7 @@
 import { Universe } from "./wasm_game_of_life";
 import { memory } from "./wasm_game_of_life_bg";
 
-const CELL_SIZE = 5; // px
+const CELL_SIZE = 8; // px
 const GRID_COLOR = "#CCCCCC";
 const DEAD_COLOR = "#FFFFFF";
 const ALIVE_COLOR = "#000000";
@@ -78,13 +78,75 @@ const drawCells = () => {
   ctx.stroke();
 };
 
+const draw =() => {
+  drawGrid();
+  drawCells();
+}
+
+let animationId = null;
+
+const isPaused = () => {
+  return animationId === null;
+};
+
+const playPauseButton = document.getElementById("play-pause");
+const playClearButton = document.getElementById("play-clear");
+const playRandButton = document.getElementById("play-randgen");
+
+const play = () => {
+  playPauseButton.textContent = "⏸";
+  renderLoop();
+};
+
+const pause = () => {
+  playPauseButton.textContent = "▶";
+  cancelAnimationFrame(animationId);
+  animationId = null;
+};
+
+playPauseButton.addEventListener("click", event => {
+  if (isPaused()) {
+    play();
+  } else {
+    pause();
+  }
+});
+
+playClearButton.addEventListener("click", event => {
+  universe.clear();
+  draw();
+  pause();
+});
+
+playRandButton.addEventListener("click", event => {
+  universe.rand_gen();
+  draw();
+  
+  pause();
+});
+
+canvas.addEventListener("click", event => {
+  const boundingRect = canvas.getBoundingClientRect();
+
+  const scaleX = canvas.width / boundingRect.width;
+  const scaleY = canvas.height / boundingRect.height;
+
+  const canvasLeft = (event.clientX - boundingRect.left) * scaleX;
+  const canvasTop = (event.clientY - boundingRect.top) * scaleY;
+
+  const row = Math.min(Math.floor(canvasTop / (CELL_SIZE + 1)), height - 1);
+  const col = Math.min(Math.floor(canvasLeft / (CELL_SIZE + 1)), width - 1);
+
+  universe.toggle_cell(row, col);
+
+  draw();
+});
+
 const renderLoop = () => {
 
   universe.tick();
-    drawGrid();
-    drawCells();
-  
-    requestAnimationFrame(renderLoop);
-  };
+  draw(); 
+  animationId =requestAnimationFrame(renderLoop);
+ };
 
-  requestAnimationFrame(renderLoop);
+play();

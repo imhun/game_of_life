@@ -5,12 +5,30 @@ extern crate wasm_bindgen;
 
 use bit_field::*;
 use wasm_bindgen::prelude::*;
+/*
+#[wasm_bindgen]
+extern {
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(msg: &str);
+}
+
+// A macro to provide `println!(..)`-style syntax for `console.log` logging.
+macro_rules! log {
+    ($($t:tt)*) => (log(&format!($($t)*)))
+}
+*/
+#[wasm_bindgen]
+extern {
+    #[wasm_bindgen(js_namespace = Math)]
+    fn random() -> f64;
+}
 
 type Cells = Vec<u8>;
 
 trait BitOper {
     fn get_bit(&self, idx: usize) -> bool;
     fn set_bit(&mut self, idx: usize, val: bool);
+    fn toggle(&mut self,idx:usize);
 }
 
 impl BitOper for Cells {
@@ -21,7 +39,13 @@ impl BitOper for Cells {
     fn set_bit(&mut self, idx: usize, val: bool) {
         self.as_mut_slice().set_bit(idx, val);
     }
+
+    fn toggle(&mut self,idx:usize) {
+        let val=self.get_bit(idx);
+        self.set_bit(idx,!val);
+    }
 }
+
 #[wasm_bindgen]
 pub struct Universe {
     width: u32,
@@ -50,7 +74,6 @@ impl Universe {
         }
         count
     }
-
     // ...
 }
 
@@ -71,16 +94,13 @@ impl Universe {
                 cells.set_bit(i, false);
             }
         }
-        //log!("new:{:?}",un.cells);
+        //log!("new cells:{:?}",cells);
         Universe {
             width,
             height,
             cells,
         }
-    }
-
-    pub fn render(&self) -> String {
-        self.to_string()
+        
     }
 
     pub fn tick(&mut self) {
@@ -116,6 +136,21 @@ impl Universe {
         //log!("tick after:{:?}",self.cells);
     }
 
+    pub fn rand_gen(&mut self) {
+        for i in 0..((self.width*self.height) as usize) {
+          self.cells.set_bit(i,random()>0.495);  
+        }   
+    }
+
+    pub fn toggle_cell(&mut self, row: u32, column: u32) {
+        let idx = self.get_index(row, column);
+        self.cells.toggle(idx);
+    }
+    
+    pub fn clear(&mut self) {
+        self.cells.iter_mut().for_each(|x|*x=0);
+    }
+
     pub fn width(&self) -> u32 {
         self.width
     }
@@ -132,6 +167,10 @@ impl Universe {
         //log!("cells:{:?}",self.cells);
         //log!("ptr:{:?}",self.cells.as_ptr());
         self.cells.as_ptr()
+    }
+
+    pub fn render(&self) -> String {
+        self.to_string()
     }
 
     // ...
