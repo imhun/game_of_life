@@ -23,5 +23,5 @@ debug = true
 # # longer compile times.
 # codegen-units = 1
 # incremental = false
-# lto = true
+ lto = true
 # opt-level = "z"

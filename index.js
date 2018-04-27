@@ -5,7 +5,7 @@ import {
   memory
 } from "./wasm_game_of_life_bg";
 
-const CELL_SIZE = 4; // px
+const CELL_SIZE = 5; // px
 const GRID_COLOR = "#CCCCCC";
 const DEAD_COLOR = "#FFFFFF";
 const ALIVE_COLOR = "#000000";
@@ -208,7 +208,10 @@ canvas.addEventListener("click", event => {
 
 const renderLoop = () => {
   fps.render();
-  universe.tick();
+ //for (let i = 0; i < 2; i++) {
+    universe.tick();
+  //}
+  //universe.tick();
   draw();
   animationId = requestAnimationFrame(renderLoop);
 };

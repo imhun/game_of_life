@@ -28,7 +28,6 @@ macro_rules! log {
     ($($t:tt)*) => (log(&format!($($t)*)))
 }
 
-
 type Cells = Vec<u8>;
 
 trait BitOper {
@@ -57,6 +56,7 @@ pub struct Universe {
     width: u32,
     height: u32,
     cells: Cells,
+    pres: Cells,
 }
 
 impl Universe {
@@ -81,22 +81,31 @@ impl Universe {
         } else {
             column + 1
         };
+        
+        let cells = &self.pres;
         let idx = self.get_index(north, west);
-        count += self.cells.get_bit(idx) as u8;
+        count += cells.get_bit(idx) as u8;
+
         let idx = self.get_index(north, column);
-        count += self.cells.get_bit(idx) as u8;
+        count += cells.get_bit(idx) as u8;
+
         let idx = self.get_index(north, east);
-        count += self.cells.get_bit(idx) as u8;
+        count += cells.get_bit(idx) as u8;
+
         let idx = self.get_index(row, west);
-        count += self.cells.get_bit(idx) as u8;
+        count += cells.get_bit(idx) as u8;
+
         let idx = self.get_index(row, east);
-        count += self.cells.get_bit(idx) as u8;
+        count += cells.get_bit(idx) as u8;
+
         let idx = self.get_index(south, west);
-        count += self.cells.get_bit(idx) as u8;
+        count += cells.get_bit(idx) as u8;
+
         let idx = self.get_index(south, column);
-        count += self.cells.get_bit(idx) as u8;
+        count += cells.get_bit(idx) as u8;
+
         let idx = self.get_index(south, east);
-        count += self.cells.get_bit(idx) as u8;
+        count += cells.get_bit(idx) as u8;
         count
     }
     // ...
@@ -105,10 +114,10 @@ impl Universe {
 /// Public methods, exported to JavaScript.
 #[wasm_bindgen]
 impl Universe {
-    pub fn new(width:u32,height:u32) -> Universe {
+    pub fn new(width: u32, height: u32) -> Universe {
         let len = (width * height) as usize;
-
-        let mut cells = vec![0u8; if len % 8 == 0 { len / 8 } else { len / 8 + 1 }];
+        let vlen = if len % 8 == 0 { len / 8 } else { len / 8 + 1 };
+        let mut cells = vec![0u8; vlen];
 
         for i in 0..len {
             if i % 2 == 0 || i % 7 == 0 {
@@ -122,56 +131,49 @@ impl Universe {
             width,
             height,
             cells,
+            pres: vec![0u8; vlen],
         }
     }
-
     pub fn tick(&mut self) {
         let _timer = Timer::new("Universe::tick");
 
-        let mut cells = {
-            //let _timer = Timer::new("allocate next cells");
-            self.cells.clone()
-        };
-        //log!("tick before:{:?}",self.cells);
-        {
-            //let _timer = Timer::new("new generation");
-
-            for row in 0..self.height {
-                for col in 0..self.width {
-                    let idx = self.get_index(row, col);
-                    let cell = self.cells.get_bit(idx);
-                    let live_neighbors = self.live_neighbor_count(row, col);
-
-                    let next_cell = match (cell, live_neighbors) {
-                        // Rule 1: Any live cell with fewer than two live neighbours
-                        // dies, as if caused by underpopulation.
-                        (true, x) if x < 2 => false,
-                        // Rule 2: Any live cell with two or three live neighbours
-                        // lives on to the next generation.
-                        (true, 2) | (true, 3) => true,
-                        // Rule 3: Any live cell with more than three live
-                        // neighbours dies, as if by overpopulation.
-                        (true, x) if x > 3 => false,
-                        // Rule 4: Any dead cell with exactly three live neighbours
-                        // becomes a live cell, as if by reproduction.
-                        (false, 3) => true,
-                        // All other cells remain in the same state.
-                        (otherwise, _) => otherwise,
-                    };
-
-                    cells.set_bit(idx, next_cell);
-                }
-            }
+        for i in 0..((self.width * self.height) as usize) {
+            self.pres.set_bit(i, self.cells.get_bit(i));
         }
 
-        //let _timer = Timer::new("free old cells");
-        self.cells = cells;
-        //log!("tick after:{:?}",self.cells);
+        //let _timer = Timer::new("new generation");
+
+        for row in 0..self.height {
+            for col in 0..self.width {
+                let idx = self.get_index(row, col);
+                let cell = self.pres.get_bit(idx);
+                let live_neighbors = self.live_neighbor_count(row, col);
+
+                let next_cell = match (cell, live_neighbors) {
+                    // Rule 1: Any live cell with fewer than two live neighbours
+                    // dies, as if caused by underpopulation.
+                    (true, x) if x < 2 => false,
+                    // Rule 2: Any live cell with two or three live neighbours
+                    // lives on to the next generation.
+                    (true, 2) | (true, 3) => true,
+                    // Rule 3: Any live cell with more than three live
+                    // neighbours dies, as if by overpopulation.
+                    (true, x) if x > 3 => false,
+                    // Rule 4: Any dead cell with exactly three live neighbours
+                    // becomes a live cell, as if by reproduction.
+                    (false, 3) => true,
+                    // All other cells remain in the same state.
+                    (otherwise, _) => otherwise,
+                };
+
+                self.cells.set_bit(idx, next_cell);
+            }
+        }
     }
 
     pub fn rand_gen(&mut self) {
         for i in 0..((self.width * self.height) as usize) {
-            self.cells.set_bit(i,random()>0.4995);
+            self.cells.set_bit(i, random() > 0.4995);
         }
     }
 
