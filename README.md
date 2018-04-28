@@ -1,4 +1,4 @@
-# The game of life 
+# The game of life  --[live demo](https://huwsun.github.io/game_life/)
 ### Requirement
 
    install node.js,yarn,rust nightly toolchain
@@ -15,5 +15,3 @@ yarn run build-release
 ````
 yarn run serve
 ````
-
-##### [live demo](https://huwsun.github.io/game_life/)
