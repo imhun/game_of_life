@@ -15,3 +15,5 @@ yarn run build-release
 ````
 yarn run serve
 ````
+
+##### [live demo](https://huwsun.github.io/game_life/)
