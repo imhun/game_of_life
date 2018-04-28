@@ -1,9 +1,7 @@
 #![feature(proc_macro, wasm_custom_section, wasm_import_module)]
 
-extern crate bit_field;
 extern crate wasm_bindgen;
 
-use bit_field::*;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -30,24 +28,41 @@ macro_rules! log {
 
 type Cells = Vec<u8>;
 
-trait BitOper {
-    fn get_bit(&self, idx: usize) -> bool;
-    fn set_bit(&mut self, idx: usize, val: bool);
-    fn toggle(&mut self, idx: usize);
+trait BitOper<T> {
+    fn get_bit(&self, idx: T) -> bool;
+    fn set_bit(&mut self, idx: T, val: bool);
+    fn toggle(&mut self, idx: T);
 }
 
-impl BitOper for Cells {
+impl BitOper<u8> for u8 {
+    fn set_bit(&mut self, idx: u8, val: bool) {
+        if val {
+            *self = *self | 1 << idx;
+        } else {
+            *self = *self & !(1 << idx);
+        }
+    }
+
+    fn get_bit(&self, idx: u8) -> bool {
+        (self & 1 << idx) != 0
+    }
+
+    fn toggle(&mut self, idx: u8) {
+        *self = *self ^ 1 << idx;
+    }
+}
+
+impl BitOper<usize> for Cells {
     fn get_bit(&self, idx: usize) -> bool {
-        self.as_slice().get_bit(idx)
+        self[idx / 8].get_bit((idx % 8) as u8)
     }
 
     fn set_bit(&mut self, idx: usize, val: bool) {
-        self.as_mut_slice().set_bit(idx, val);
+        self[idx / 8].set_bit( (idx % 8) as u8, val);
     }
 
     fn toggle(&mut self, idx: usize) {
-        let val = self.get_bit(idx);
-        self.set_bit(idx, !val);
+        self[idx / 8].toggle( (idx % 8) as u8);
     }
 }
 
@@ -81,7 +96,7 @@ impl Universe {
         } else {
             column + 1
         };
-        
+
         let cells = &self.pres;
         let idx = self.get_index(north, west);
         count += cells.get_bit(idx) as u8;
